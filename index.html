@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Caltrain Departures – Hillsdale</title>
-<meta name="viewport" content="width=449, height=797, initial-scale=1.0" />
+<title>Caltrain Departures – Hillsdale Station</title>
+<meta name="viewport" content="width=449, height=797, initial-scale=1.0, user-scalable=no" />
 
 <style>
   @font-face {
@@ -25,9 +25,9 @@
     overflow: hidden;
     font-family: "Sailec", sans-serif;
     background: transparent;
-    position: relative;
   }
 
+  /* ✅ Background video setup */
   #bg-video {
     position: absolute;
     top: 0;
@@ -47,40 +47,49 @@
     flex-direction: column;
   }
 
+  /* ---- Header ---- */
   header {
     text-align: center;
-    padding: 12px 0 8px;
-    background: rgba(255, 255, 255, 0.9);
+    padding: 22px 10px 12px;
+    background: rgba(255,255,255,0.85);
     color: #B82525;
-    font-size: 30px;
     font-weight: 700;
-    flex-shrink: 0;
+    line-height: 1.1;
+  }
+
+  header .main-title {
+    font-size: 34px;
+    display: block;
+  }
+
+  header .sub-title {
+    font-size: 24px;
+    display: block;
+    font-weight: 600;
+  }
+
+  /* ---- Table / Panels ---- */
+  .table-container {
+    position: relative;
+    flex: 1;
+    margin-top: 10px;
+    overflow: hidden;
   }
 
   .direction {
     text-align: center;
-    font-size: 22px;
+    font-size: 28px;
     color: #B82525;
     font-weight: 700;
-    background: rgba(255,255,255,0.9);
-    padding: 4px 0;
-    flex-shrink: 0;
-  }
-
-  .table-container {
-    flex: 1;
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    margin: 8px 0 4px;
   }
 
   table {
     border-collapse: collapse;
     width: 420px;
-    background: rgba(255,255,255,0.9);
-    font-size: 18px;
+    margin: 0 auto;
+    background: rgba(255,255,255,0.85);
+    font-size: 20px;
   }
 
   th, td {
@@ -91,62 +100,62 @@
 
   th {
     color: #B82525;
-    font-size: 20px;
+    font-size: 22px;
   }
 
   .type-label {
     display: inline-block;
-    padding: 3px 7px;
+    padding: 3px 8px;
     border-radius: 3px;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 16px;
   }
-
   .Express { background-color: #B82525; color: #fff; }
   .Limited { background-color: #7BB7BD; color: #000; }
   .Local { background-color: #000; color: #fff; }
 
   .time-box {
     background: #eee;
-    padding: 3px 6px;
+    padding: 4px 6px;
     border-radius: 4px;
     font-weight: bold;
     color: #000;
   }
 
-  /* Swipe animation */
+  /* ---- Smooth slide+fade transition ---- */
   .panel {
     position: absolute;
     width: 100%;
     top: 0;
-    transition: transform 0.9s ease-in-out, opacity 0.6s ease-in-out;
     opacity: 0;
-    transform: translateX(100%);
+    transform: translateY(20px);
+    transition: all 0.8s ease-in-out;
   }
+
   .panel.active {
     opacity: 1;
-    transform: translateX(0%);
+    transform: translateY(0);
     z-index: 2;
-  }
-  .panel.exit-left {
-    transform: translateX(-100%);
-    opacity: 0;
-    z-index: 1;
   }
 </style>
 </head>
 
 <body>
+  <!-- ✅ Background video -->
   <video id="bg-video" autoplay muted loop playsinline>
     <source src="https://resources.finalsite.net/videos/t_video_mp4_480/v1761076733/nuevaschoolorg/fe0wwzdbajc9lrn6qpkz/CaltrainSidebar.mp4" type="video/mp4">
   </video>
 
   <div class="content">
-    <header>Caltrain Departures – Hillsdale</header>
-    <div class="direction" id="directionLabel">Northbound</div>
+    <header>
+      <span class="main-title"><br>Caltrain Departures</span>
+      <span class="sub-title">Hillsdale Station</span>
+    </header>
 
     <div class="table-container">
+      <!-- Northbound Panel -->
       <div class="panel active" id="north-panel">
+        <div class="direction">Northbound</div>
         <table id="north-table">
           <thead>
             <tr><th>Type</th><th>Departs In</th><th>Time</th></tr>
@@ -155,7 +164,9 @@
         </table>
       </div>
 
+      <!-- Southbound Panel -->
       <div class="panel" id="south-panel">
+        <div class="direction">Southbound</div>
         <table id="south-table">
           <thead>
             <tr><th>Type</th><th>Departs In</th><th>Time</th></tr>
@@ -238,24 +249,13 @@
   function rotatePanels() {
     const north = document.getElementById("north-panel");
     const south = document.getElementById("south-panel");
-    const label = document.getElementById("directionLabel");
 
     if (showingNorth) {
       north.classList.remove("active");
-      north.classList.add("exit-left");
-      setTimeout(() => {
-        south.classList.add("active");
-        north.classList.remove("exit-left");
-      }, 50);
-      label.textContent = "Southbound";
+      south.classList.add("active");
     } else {
       south.classList.remove("active");
-      south.classList.add("exit-left");
-      setTimeout(() => {
-        north.classList.add("active");
-        south.classList.remove("exit-left");
-      }, 50);
-      label.textContent = "Northbound";
+      north.classList.add("active");
     }
     showingNorth = !showingNorth;
   }
