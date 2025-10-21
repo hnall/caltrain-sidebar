@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Caltrain Departures – Hillsdale</title>
+<meta name="viewport" content="width=449, height=797, initial-scale=1.0" />
+
+<style>
+  @font-face {
+    font-family: "Sailec";
+    src: url("https://raw.githubusercontent.com/hnall/sailec-font/main/Type%20Dynamic%20-%20Sailec.otf") format("opentype");
+    font-weight: 400;
+  }
+  @font-face {
+    font-family: "Sailec";
+    src: url("https://raw.githubusercontent.com/hnall/sailec-font/main/Type%20Dynamic%20-%20Sailec%20Bold.otf") format("opentype");
+    font-weight: 700;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 449px;
+    height: 797px;
+    overflow: hidden;
+    font-family: "Sailec", sans-serif;
+    background: transparent;
+    position: relative;
+  }
+
+  /* ---- Fixed-size video background ---- */
+  #bg-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 449px;
+    height: 797px;
+    object-fit: none;
+    object-position: top left;
+    z-index: -1;
+  }
+
+  header {
+    text-align: center;
+    padding: 16px 0;
+    background: rgba(255, 255, 255, 0.85);
+    color: #B82525;
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .direction {
+    text-align: center;
+    font-size: 24px;
+    color: #B82525;
+    font-weight: 700;
+    background: rgba(255,255,255,0.85);
+    margin: 0;
+    padding: 4px 0;
+  }
+
+  .table-container {
+    position: relative;
+    height: calc(100% - 140px);
+    overflow: hidden;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 420px;
+    margin: 0 auto;
+    background: rgba(255,255,255,0.85);
+    font-size: 20px;
+  }
+
+  th, td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #ccc;
+    text-align: center;
+  }
+
+  th {
+    color: #B82525;
+    font-size: 22px;
+  }
+
+  .type-label {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-weight: bold;
+    font-size: 16px;
+  }
+  .Express { background-color: #B82525; color: #fff; }
+  .Limited { background-color: #7BB7BD; color: #000; }
+  .Local { background-color: #000; color: #fff; }
+
+  .time-box {
+    background: #eee;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    color: #000;
+  }
+
+  /* ---- Swipe animation ---- */
+  .panel {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    transition: transform 0.8s ease-in-out, opacity 0.6s ease-in-out;
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  .panel.active {
+    opacity: 1;
+    transform: translateX(0%);
+    z-index: 2;
+  }
+  .panel.exit-left {
+    transform: translateX(-100%);
+    opacity: 0;
+    z-index: 1;
+  }
+</style>
+</head>
+
+<body>
+  <video id="bg-video" autoplay muted loop playsinline>
+    <source src="https://resources.finalsite.net/videos/t_video_mp4_480/v1761076733/nuevaschoolorg/fe0wwzdbajc9lrn6qpkz/CaltrainSidebar.mp4" type="video/mp4">
+  </video>
+
+  <header>Caltrain Departures – Hillsdale</header>
+  <div class="direction" id="directionLabel">Northbound</div>
+
+  <div class="table-container">
+    <div class="panel active" id="north-panel">
+      <table id="north-table">
+        <thead>
+          <tr><th>Type</th><th>Departs In</th><th>Time</th></tr>
+        </thead>
+        <tbody><tr><td colspan="3">Loading...</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="panel" id="south-panel">
+      <table id="south-table">
+        <thead>
+          <tr><th>Type</th><th>Departs In</th><th>Time</th></tr>
+        </thead>
+        <tbody><tr><td colspan="3">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+  const API_KEY = "Lp3ULQOS4VUNkWbscGGSSQwDcQ5jifF9";
+  const NORTHBOUND_ID = "s-9q9j8fqv83-hillsdalecaltrainstationnorthbound";
+  const SOUTHBOUND_ID = "s-9q9j8fqths-hillsdalecaltrainstationsouthbound";
+  const ROW_LIMIT = 12;
+  const SWITCH_INTERVAL = 10000;
+  const REFRESH_INTERVAL = 60000;
+
+  async function getPacificNow() {
+    try {
+      const res = await fetch("https://worldtimeapi.org/api/timezone/America/Los_Angeles");
+      const data = await res.json();
+      return new Date(data.datetime);
+    } catch {
+      return new Date();
+    }
+  }
+
+  async function loadDepartures(stopId) {
+    const url = `https://transit.land/api/v2/rest/stops/${stopId}/departures?next=7200&limit=15&apikey=${API_KEY}`;
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      return data.stops?.[0]?.departures || [];
+    } catch {
+      return [];
+    }
+  }
+
+  function formatRow(dep, pacificNow) {
+    const typeRaw = dep.trip?.route?.route_short_name || "";
+    let typeClass = "Local", typeLabel = "Local";
+    if (typeRaw.includes("Express")) { typeClass = "Express"; typeLabel = "Express"; }
+    else if (typeRaw.includes("Limited")) { typeClass = "Limited"; typeLabel = "Limited"; }
+
+    const departISO = dep.departure?.estimated_local || dep.departure?.scheduled_local;
+    const departDate = new Date(departISO);
+    const minsAway = Math.max(0, Math.round((departDate - pacificNow) / 60000));
+
+    const timeStr = departDate.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'America/Los_Angeles'
+    });
+
+    return `<tr>
+      <td><span class="type-label ${typeClass}">${typeLabel}</span></td>
+      <td>${minsAway} min</td>
+      <td><span class="time-box">${timeStr}</span></td>
+    </tr>`;
+  }
+
+  async function refresh() {
+    const pacificNow = await getPacificNow();
+    const [north, south] = await Promise.all([
+      loadDepartures(NORTHBOUND_ID),
+      loadDepartures(SOUTHBOUND_ID)
+    ]);
+
+    document.querySelector("#north-table tbody").innerHTML =
+      north.slice(0, ROW_LIMIT).map(dep => formatRow(dep, pacificNow)).join('') ||
+      `<tr><td colspan="3">No upcoming trains</td></tr>`;
+
+    document.querySelector("#south-table tbody").innerHTML =
+      south.slice(0, ROW_LIMIT).map(dep => formatRow(dep, pacificNow)).join('') ||
+      `<tr><td colspan="3">No upcoming trains</td></tr>`;
+  }
+
+  let showingNorth = true;
+  function rotatePanels() {
+    const north = document.getElementById("north-panel");
+    const south = document.getElementById("south-panel");
+    const label = document.getElementById("directionLabel");
+
+    if (showingNorth) {
+      north.classList.remove("active");
+      north.classList.add("exit-left");
+      south.classList.remove("exit-left");
+      setTimeout(() => {
+        south.classList.add("active");
+        north.classList.remove("exit-left");
+      }, 20);
+      label.textContent = "Southbound";
+    } else {
+      south.classList.remove("active");
+      south.classList.add("exit-left");
+      north.classList.remove("exit-left");
+      setTimeout(() => {
+        north.classList.add("active");
+        south.classList.remove("exit-left");
+      }, 20);
+      label.textContent = "Northbound";
+    }
+    showingNorth = !showingNorth;
+  }
+
+  refresh();
+  setInterval(refresh, REFRESH_INTERVAL);
+  setInterval(rotatePanels, SWITCH_INTERVAL);
+</script>
+</body>
+</html>
