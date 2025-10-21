@@ -17,28 +17,47 @@
     font-weight: 700;
   }
 
-  html, body {
-    margin: 0;
-    padding: 0;
-    width: 449px;
-    height: 797px;
-    overflow: hidden;
-    font-family: "Sailec", sans-serif;
-    background: transparent;
-    position: relative;
-  }
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: "Sailec", sans-serif;
+  background: transparent;
+  position: relative;
+}
 
-  /* ---- Fixed-size video background ---- */
-  #bg-video {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 449px;
-    height: 797px;
-    object-fit: none;
-    object-position: top left;
-    z-index: -1;
-  }
+#bg-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 449px;
+  height: 797px;
+  overflow: hidden;
+}
+
+#bg-video {
+  width: 449px;
+  height: 797px;
+  object-fit: none;
+  object-position: top left;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 449px;
+  height: 797px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
 
   header {
     text-align: center;
@@ -131,6 +150,13 @@
     <source src="https://resources.finalsite.net/videos/t_video_mp4_480/v1761076733/nuevaschoolorg/fe0wwzdbajc9lrn6qpkz/CaltrainSidebar.mp4" type="video/mp4">
   </video>
 
+<div id="bg-wrapper">
+  <video id="bg-video" autoplay muted loop playsinline>
+    <source src="https://resources.finalsite.net/videos/t_video_mp4_480/v1761076733/nuevaschoolorg/fe0wwzdbajc9lrn6qpkz/CaltrainSidebar.mp4" type="video/mp4">
+  </video>
+</div>
+
+<div class="content">
   <header>Caltrain Departures – Hillsdale</header>
   <div class="direction" id="directionLabel">Northbound</div>
 
@@ -153,6 +179,8 @@
       </table>
     </div>
   </div>
+</div>
+
 
 <script>
   const API_KEY = "Lp3ULQOS4VUNkWbscGGSSQwDcQ5jifF9";
